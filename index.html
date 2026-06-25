@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedStore — Bardhaman</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --y: #d6f72f;
+  --y2: #c8e820;
+  --ink: #0d0d0d;
+  --white: #ffffff;
+  --off: #f7f7f5;
+  --muted: #888;
+  --border: #e2e2e2;
+  --card-r: 20px;
+  --ease: cubic-bezier(.4,0,.2,1);
+  --spring: cubic-bezier(.34,1.56,.64,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-tap-highlight-color:transparent}
+body{font-family:'DM Sans',sans-serif;background:var(--white);color:var(--ink);overflow-x:hidden;min-height:100vh}
+
+/* ── LOADER ── */
+#loader{position:fixed;inset:0;z-index:9999;background:var(--y);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;transition:opacity .6s var(--ease),visibility .6s}
+#loader.out{opacity:0;visibility:hidden;pointer-events:none}
+.ld-logo{font-family:'Syne',sans-serif;font-size:2.2rem;font-weight:800;letter-spacing:-.03em}
+.ld-sub{font-size:.85rem;color:rgba(0,0,0,.5);font-weight:500}
+.ld-dots{display:flex;gap:7px}
+.ld-dot{width:9px;height:9px;border-radius:50%;background:var(--ink);animation:ldpulse 1s infinite ease-in-out}
+.ld-dot:nth-child(2){animation-delay:.2s}
+.ld-dot:nth-child(3){animation-delay:.4s}
+@keyframes ldpulse{0%,80%,100%{transform:scale(.5);opacity:.3}40%{transform:scale(1);opacity:1}}
+
+/* ── HERO ── */
+#hero{background:var(--y);overflow:hidden;transition:max-height .5s var(--ease),opacity .4s var(--ease),padding .5s var(--ease);max-height:340px;padding:28px 20px 0;position:relative}
+#hero.gone{max-height:0;opacity:0;padding:0;pointer-events:none}
+.hero-inner{max-width:520px;margin:0 auto;text-align:center}
+.hero-store{width:100%;height:180px;background:linear-gradient(160deg,#c5e016 0%,#d6f72f 50%,#e8ff60 100%);border-radius:18px 18px 0 0;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.hero-store::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(214,247,47,.9) 100%)}
+.store-svg{opacity:.18}
+.hero-tag{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);font-family:'Syne',sans-serif;font-size:.95rem;font-weight:700;color:rgba(0,0,0,.4);white-space:nowrap;z-index:1}
+
+/* ── STICKY NAV ── */
+#nav{position:sticky;top:0;z-index:500;background:rgba(255,255,255,.96);backdrop-filter:blur(12px);border-bottom:1.5px solid var(--border);height:56px;display:flex;align-items:center;padding:0 16px;gap:10px}
+.nav-ham{background:none;border:none;cursor:pointer;padding:8px 6px;display:flex;flex-direction:column;gap:5px;border-radius:10px;transition:background .15s}
+.nav-ham:hover{background:var(--off)}
+.nav-ham span{display:block;width:22px;height:2px;background:var(--ink);border-radius:2px;transition:transform .35s var(--ease),opacity .2s}
+.nav-ham.x span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.nav-ham.x span:nth-child(2){opacity:0;transform:scaleX(0)}
+.nav-ham.x span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+.nav-label{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;flex:1}
+/* desktop tabs */
+.nav-tabs{display:flex;align-items:center;gap:0;flex:1}
+.nav-tab{font-family:'Syne',sans-serif;font-size:.88rem;font-weight:700;color:var(--muted);padding:0 16px;height:56px;display:flex;align-items:center;cursor:pointer;border-bottom:2.5px solid transparent;transition:color .15s,border-color .15s;background:none;border-top:none;border-left:none;border-right:none;white-space:nowrap}
+.nav-tab.on{color:var(--ink);border-bottom-color:var(--ink)}
+.nav-tab:hover:not(.on){color:var(--ink)}
+/* search btn (mobile) */
+.nav-search-btn{margin-left:auto;background:none;border:none;cursor:pointer;padding:8px;border-radius:10px;color:var(--muted);transition:background .15s,color .15s}
+.nav-search-btn:hover{background:var(--off);color:var(--ink)}
+/* cart btn */
+.nav-cart-btn{position:relative;background:none;border:none;cursor:pointer;padding:8px;border-radius:10px;color:var(--ink);transition:background .15s}
+.nav-cart-btn:hover{background:var(--off)}
+.cart-badge{position:absolute;top:4px;right:4px;min-width:16px;height:16px;background:var(--ink);color:var(--y);border-radius:8px;font-size:.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 3px;display:none}
+.cart-badge.show{display:flex}
+/* desktop search */
+.nav-search-wrap{flex:0 0 240px;display:flex;align-items:center;background:var(--off);border-radius:30px;padding:0 14px;gap:8px;height:38px;border:1.5px solid var(--border);transition:border-color .15s,box-shadow .15s}
+.nav-search-wrap:focus-within{border-color:var(--ink);box-shadow:0 0 0 3px rgba(13,13,13,.07)}
+.nav-search-wrap input{background:none;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:.88rem;color:var(--ink);flex:1;min-width:0}
+
+/* ── DYNAMIC ISLAND ── */
+#island{position:fixed;top:12px;left:50%;transform:translateX(-50%) translateY(-80px);z-index:600;background:var(--ink);color:var(--white);border-radius:40px;padding:0 16px;height:48px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.3);transition:transform .45s var(--spring),opacity .3s;opacity:0;pointer-events:none;min-width:220px}
+#island.show{transform:translateX(-50%) translateY(0);opacity:1;pointer-events:all}
+.isl-ham{background:none;border:none;cursor:pointer;display:flex;flex-direction:column;gap:4px;padding:4px}
+.isl-ham span{display:block;width:18px;height:1.5px;background:var(--white);border-radius:2px;transition:transform .3s var(--ease),opacity .2s}
+.isl-ham.x span:nth-child(1){transform:translateY(5.5px) rotate(45deg)}
+.isl-ham.x span:nth-child(2){opacity:0}
+.isl-ham.x span:nth-child(3){transform:translateY(-5.5px) rotate(-45deg)}
+.isl-label{font-family:'Syne',sans-serif;font-size:.82rem;font-weight:700;flex:1;letter-spacing:.02em}
+.isl-search{background:none;border:none;cursor:pointer;color:rgba(255,255,255,.7);padding:4px;display:flex;align-items:center;transition:color .15s}
+.isl-search:hover{color:var(--white)}
+.isl-cart{position:relative;background:none;border:none;cursor:pointer;color:rgba(255,255,255,.7);padding:4px;display:flex;align-items:center;transition:color .15s}
+.isl-cart:hover{color:var(--white)}
+.isl-badge{position:absolute;top:0;right:0;min-width:14px;height:14px;background:var(--y);color:var(--ink);border-radius:7px;font-size:.55rem;font-weight:800;display:none;align-items:center;justify-content:center;padding:0 2px}
+.isl-badge.show{display:flex}
+
+/* ── MOBILE TOP HEADER (below hero, above grid) ── */
+#mob-header{padding:16px 16px 0;display:none}
+.mob-page-title{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;margin-bottom:10px}
+.mob-search{display:flex;align-items:center;background:var(--off);border-radius:30px;padding:0 14px;gap:8px;height:44px;border:1.5px solid var(--border);transition:border-color .15s,box-shadow .15s}
+.mob-search:focus-within{border-color:var(--ink);box-shadow:0 0 0 3px rgba(13,13,13,.07)}
+.mob-search input{background:none;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:.92rem;color:var(--ink);flex:1}
+
+/* ── SEARCH OVERLAY (mobile) ── */
+#search-overlay{position:fixed;inset:0;z-index:700;background:var(--white);transform:translateY(100%);transition:transform .4s var(--ease);display:flex;flex-direction:column}
+#search-overlay.open{transform:translateY(0)}
+.so-head{padding:14px 16px;display:flex;align-items:center;gap:10px;border-bottom:1.5px solid var(--border)}
+.so-back{background:none;border:none;cursor:pointer;padding:6px;border-radius:8px;color:var(--muted)}
+.so-input{flex:1;display:flex;align-items:center;background:var(--off);border-radius:30px;padding:0 14px;gap:8px;height:40px;border:1.5px solid var(--border)}
+.so-input:focus-within{border-color:var(--ink)}
+.so-input input{background:none;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:.92rem;flex:1}
+.so-results{flex:1;overflow-y:auto;padding:16px}
+.so-result-item{display:flex;align-items:center;gap:14px;padding:12px;border-radius:14px;cursor:pointer;transition:background .15s;border:1.5px solid transparent;margin-bottom:8px}
+.so-result-item:hover{background:var(--off);border-color:var(--border)}
+.so-thumb{width:52px;height:52px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;border:1.5px solid var(--border)}
+.so-info .so-name{font-family:'Syne',sans-serif;font-size:.88rem;font-weight:700}
+.so-info .so-dose{font-size:.75rem;color:var(--muted);margin-top:2px}
+.so-empty{text-align:center;padding:60px 0;color:var(--muted);font-size:.9rem}
+
+/* ── DRAWER ── */
+#overlay{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.4);opacity:0;visibility:hidden;transition:opacity .35s,visibility .35s}
+#overlay.on{opacity:1;visibility:visible}
+#drawer{position:fixed;top:0;left:0;bottom:0;width:268px;z-index:800;background:var(--white);transform:translateX(-100%);transition:transform .38s var(--ease);display:flex;flex-direction:column;padding:0 0 24px}
+#drawer.on{transform:translateX(0)}
+.dr-top{padding:28px 24px 20px;border-bottom:1.5px solid var(--border)}
+.dr-brand{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800}
+.dr-tagline{font-size:.75rem;color:var(--muted);margin-top:2px}
+.dr-items{padding:12px 0;flex:1}
+.dr-item{display:flex;align-items:center;gap:12px;padding:13px 24px;font-family:'Syne',sans-serif;font-size:.92rem;font-weight:700;color:var(--muted);cursor:pointer;transition:background .15s,color .15s}
+.dr-item:hover,.dr-item.on{background:var(--off);color:var(--ink)}
+.dr-item.on{border-left:3px solid var(--y2)}
+.dr-item svg{flex-shrink:0}
+.dr-close{position:absolute;top:16px;right:16px;background:none;border:none;cursor:pointer;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:background .15s}
+.dr-close:hover{background:var(--off)}
+
+/* ── PAGES ── */
+.pg{display:none;animation:pgIn .3s var(--ease)}
+.pg.on{display:block}
+@keyframes pgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── HOME ── */
+#pg-home{padding:20px 16px 100px}
+.sec-title{font-family:'Syne',sans-serif;font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+#med-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+/* CARD */
+.med-card{background:var(--white);border:2px solid var(--ink);border-radius:var(--card-r);overflow:hidden;cursor:pointer;transition:transform .2s var(--spring),box-shadow .2s;box-shadow:3px 3px 0 var(--ink);display:flex;flex-direction:column;position:relative}
+.med-card:hover{transform:translateY(-4px) scale(1.01);box-shadow:6px 6px 0 var(--ink)}
+.med-card:active{transform:scale(.97);box-shadow:1px 1px 0 var(--ink)}
+.med-img-wrap{margin:10px 10px 0;height:86px;border-radius:12px;border:1.5px solid var(--border);overflow:hidden;background:var(--off);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.med-img-wrap .pill-art{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2rem;position:relative}
+.med-body{padding:9px 11px 12px;flex:1}
+.med-name{font-family:'Syne',sans-serif;font-size:.78rem;font-weight:700;line-height:1.25;margin-bottom:4px}
+.med-dose{font-size:.68rem;color:var(--muted);line-height:1.4}
+.med-dose mark{background:var(--y);color:var(--ink);border-radius:3px;padding:0 2px;font-style:normal}
+.med-name mark{background:var(--y);color:var(--ink);border-radius:3px;padding:0 2px;font-style:normal}
+#no-res{display:none;grid-column:1/-1;text-align:center;padding:60px 0;color:var(--muted);font-family:'Syne',sans-serif;font-size:.9rem}
+
+/* ── DETAIL PAGE ── */
+#pg-detail{padding:0 0 100px;min-height:100vh}
+.det-back{display:flex;align-items:center;gap:8px;padding:14px 16px;font-family:'Syne',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;color:var(--muted);transition:color .15s;background:none;border:none;width:100%}
+.det-back:hover{color:var(--ink)}
+.det-hero{width:100%;background:var(--off);display:flex;align-items:center;justify-content:center;padding:40px 20px;position:relative;min-height:240px}
+.det-pill-art{font-size:6rem;filter:drop-shadow(0 12px 32px rgba(0,0,0,.12))}
+.det-badge{position:absolute;top:14px;right:14px;background:var(--y);border-radius:30px;padding:4px 12px;font-family:'Syne',sans-serif;font-size:.7rem;font-weight:700;border:2px solid var(--ink)}
+.det-body{padding:20px 16px}
+.det-name{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;line-height:1.15;letter-spacing:-.02em;margin-bottom:6px}
+.det-use{font-size:.85rem;color:var(--muted);margin-bottom:18px}
+.det-section{margin-bottom:20px}
+.det-section-title{font-family:'Syne',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.det-contents{display:flex;flex-wrap:wrap;gap:6px}
+.det-chip{background:var(--off);border:1.5px solid var(--border);border-radius:30px;padding:5px 12px;font-size:.78rem;font-weight:500}
+.det-strip{background:var(--y);border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;border:2px solid var(--ink)}
+.det-strip-label{font-family:'Syne',sans-serif;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:rgba(0,0,0,.5)}
+.det-strip-val{font-family:'Syne',sans-serif;font-size:1rem;font-weight:800}
+.det-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 20px}
+.btn-cart{background:var(--white);border:2.5px solid var(--ink);border-radius:14px;padding:14px;font-family:'Syne',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;transition:background .15s,transform .15s var(--spring);box-shadow:3px 3px 0 var(--ink)}
+.btn-cart:hover{background:var(--off);transform:translateY(-2px)}
+.btn-cart:active{transform:translateY(0);box-shadow:1px 1px 0 var(--ink)}
+.btn-buy{background:var(--ink);color:var(--y);border:2.5px solid var(--ink);border-radius:14px;padding:14px;font-family:'Syne',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;transition:background .15s,transform .15s var(--spring);box-shadow:3px 3px 0 rgba(0,0,0,.3)}
+.btn-buy:hover{background:#222;transform:translateY(-2px)}
+.btn-buy:active{transform:translateY(0)}
+.added-flash{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--y);padding:10px 22px;border-radius:30px;font-family:'Syne',sans-serif;font-size:.82rem;font-weight:700;opacity:0;transition:opacity .3s,transform .3s var(--spring);pointer-events:none;z-index:900;white-space:nowrap}
+.added-flash.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── CART PAGE ── */
+#pg-cart{padding:20px 16px 100px;min-height:60vh}
+.pg-heading{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;margin-bottom:20px;letter-spacing:-.02em}
+.cart-empty{text-align:center;padding:80px 0;color:var(--muted)}
+.cart-empty svg{opacity:.2;margin-bottom:16px}
+.cart-empty p{font-family:'Syne',sans-serif;font-size:.95rem;font-weight:600}
+.cart-item{display:flex;gap:12px;padding:14px;background:var(--white);border:2px solid var(--ink);border-radius:var(--card-r);margin-bottom:10px;box-shadow:3px 3px 0 var(--ink);transition:transform .15s}
+.cart-item:hover{transform:translateY(-2px)}
+.ci-thumb{width:64px;height:64px;border-radius:12px;background:var(--off);display:flex;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0;border:1.5px solid var(--border)}
+.ci-info{flex:1;min-width:0}
+.ci-name{font-family:'Syne',sans-serif;font-size:.88rem;font-weight:700;margin-bottom:2px}
+.ci-dose{font-size:.72rem;color:var(--muted)}
+.ci-actions{display:flex;gap:6px;margin-top:10px;align-items:center}
+.ci-qty{display:flex;align-items:center;gap:0;border:1.5px solid var(--border);border-radius:8px;overflow:hidden}
+.ci-qty button{background:none;border:none;width:28px;height:28px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.ci-qty button:hover{background:var(--off)}
+.ci-qty span{width:28px;text-align:center;font-family:'Syne',sans-serif;font-size:.82rem;font-weight:700}
+.ci-rm{background:none;border:1.5px solid var(--border);border-radius:8px;padding:4px 10px;font-size:.72rem;font-family:'Syne',sans-serif;font-weight:700;color:var(--muted);cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.ci-rm:hover{background:#fff0f0;border-color:#f00;color:#c00}
+.ci-buy{background:var(--ink);color:var(--y);border:none;border-radius:8px;padding:4px 12px;font-size:.72rem;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;transition:background .15s}
+.ci-buy:hover{background:#222}
+.cart-summary{background:var(--y);border:2px solid var(--ink);border-radius:var(--card-r);padding:16px;margin-top:16px;box-shadow:3px 3px 0 var(--ink)}
+.cs-row{display:flex;justify-content:space-between;margin-bottom:6px;font-size:.85rem}
+.cs-row.total{font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;border-top:1.5px solid rgba(0,0,0,.15);padding-top:10px;margin-top:6px}
+.cs-checkout{width:100%;margin-top:14px;background:var(--ink);color:var(--y);border:none;border-radius:12px;padding:14px;font-family:'Syne',sans-serif;font-size:.92rem;font-weight:700;cursor:pointer;transition:background .15s,transform .15s var(--spring)}
+.cs-checkout:hover{background:#222;transform:translateY(-2px)}
+
+/* ── ORDER MODAL ── */
+#order-modal{position:fixed;inset:0;z-index:900;display:flex;align-items:flex-end;pointer-events:none}
+#order-modal.open{pointer-events:all}
+.om-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.5);opacity:0;transition:opacity .35s}
+#order-modal.open .om-backdrop{opacity:1}
+.om-sheet{position:relative;z-index:1;background:var(--white);border-radius:24px 24px 0 0;padding:24px 20px 40px;width:100%;transform:translateY(100%);transition:transform .4s var(--ease)}
+#order-modal.open .om-sheet{transform:translateY(0)}
+.om-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 20px}
+.om-title{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;margin-bottom:16px;letter-spacing:-.02em}
+.om-med-row{display:flex;gap:14px;align-items:center;background:var(--off);border-radius:16px;padding:14px;margin-bottom:20px;border:1.5px solid var(--border)}
+.om-thumb{width:60px;height:60px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:2rem;background:var(--white);border:1.5px solid var(--border);flex-shrink:0}
+.om-med-name{font-family:'Syne',sans-serif;font-size:.92rem;font-weight:700}
+.om-med-dose{font-size:.75rem;color:var(--muted);margin-top:3px}
+.om-qty-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.om-qty-label{font-family:'Syne',sans-serif;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.om-qty-ctrl{display:flex;align-items:center;gap:0;border:2px solid var(--ink);border-radius:12px;overflow:hidden}
+.om-qty-ctrl button{background:none;border:none;width:40px;height:40px;cursor:pointer;font-size:1.2rem;font-weight:700;transition:background .15s;display:flex;align-items:center;justify-content:center}
+.om-qty-ctrl button:hover{background:var(--off)}
+.om-qty-ctrl span{min-width:40px;text-align:center;font-family:'Syne',sans-serif;font-size:1rem;font-weight:800}
+.om-place{width:100%;background:var(--ink);color:var(--y);border:none;border-radius:14px;padding:16px;font-family:'Syne',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s,transform .15s var(--spring)}
+.om-place:hover{background:#222;transform:translateY(-2px)}
+.om-place:active{transform:translateY(0)}
+
+/* ── LOCATION PAGE ── */
+#pg-location{padding:20px 16px 100px}
+.loc-map{width:100%;aspect-ratio:4/3;border-radius:18px;border:2.5px solid var(--ink);overflow:hidden;background:var(--off);display:flex;align-items:center;justify-content:center;margin-bottom:18px;box-shadow:4px 4px 0 var(--ink);position:relative}
+.loc-map-placeholder{text-align:center;color:var(--muted)}
+.loc-map-placeholder svg{margin-bottom:10px;opacity:.3}
+.loc-map-placeholder p{font-size:.8rem}
+.loc-addr-row{display:flex;align-items:flex-start;gap:14px}
+.loc-addr{flex:1}
+.loc-addr strong{font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;display:block;margin-bottom:5px}
+.loc-addr p{font-size:.85rem;line-height:1.7;color:#444}
+.loc-gmap{width:58px;height:58px;border-radius:16px;background:var(--white);border:2px solid var(--border);box-shadow:0 4px 16px rgba(0,0,0,.1);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:transform .2s var(--spring),box-shadow .2s;text-decoration:none;overflow:hidden}
+.loc-gmap:hover{transform:scale(1.08);box-shadow:0 8px 24px rgba(0,0,0,.15)}
+.loc-gmap img{width:42px;height:42px;object-fit:contain}
+.loc-directions{display:flex;align-items:center;gap:10px;margin-top:20px;padding:14px 16px;background:var(--y);border:2px solid var(--ink);border-radius:14px;cursor:pointer;text-decoration:none;box-shadow:3px 3px 0 var(--ink);transition:transform .15s}
+.loc-directions:hover{transform:translateY(-2px)}
+.loc-directions span{font-family:'Syne',sans-serif;font-size:.88rem;font-weight:700}
+
+/* ── CONTACTS PAGE ── */
+#pg-contacts{padding:20px 16px 100px}
+.contact-card{display:flex;align-items:center;gap:14px;padding:18px;background:var(--white);border:2px solid var(--ink);border-radius:var(--card-r);margin-bottom:10px;text-decoration:none;color:var(--ink);box-shadow:3px 3px 0 var(--ink);transition:transform .15s,box-shadow .15s}
+.contact-card:hover{transform:translateY(-3px);box-shadow:5px 5px 0 var(--ink)}
+.cc-icon{width:48px;height:48px;border-radius:14px;background:var(--y);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;border:2px solid var(--ink)}
+.cc-label{font-family:'Syne',sans-serif;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.cc-val{font-size:.9rem;font-weight:500}
+
+/* ── SCROLL TO TOP ── */
+#s2t{position:fixed;bottom:24px;right:16px;width:44px;height:44px;background:var(--ink);color:var(--white);border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:400;opacity:0;visibility:hidden;transform:scale(.7);transition:opacity .3s,transform .3s var(--spring),visibility .3s;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+#s2t.on{opacity:1;visibility:visible;transform:scale(1)}
+
+/* ── RESPONSIVE ── */
+@media(min-width:768px){
+  .mob-only{display:none!important}
+  .nav-tabs{display:flex!important}
+  .nav-search-wrap{display:flex!important}
+  #nav{padding:0 24px;gap:0}
+  #mob-header{display:none!important}
+  #med-grid{grid-template-columns:repeat(3,1fr);gap:16px}
+  #pg-home,#pg-cart,#pg-contacts,#pg-detail,#pg-location{padding-left:32px;padding-right:32px;max-width:900px;margin:0 auto}
+  .det-hero{min-height:320px}
+  .det-pill-art{font-size:8rem}
+}
+@media(max-width:767px){
+  .desk-only{display:none!important}
+  #mob-header{display:block}
+  #med-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .med-img-wrap{height:76px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="ld-logo">MedStore 💊</div>
+  <div class="ld-dots"><div class="ld-dot"></div><div class="ld-dot"></div><div class="ld-dot"></div></div>
+  <div class="ld-sub">Your device will load this in a few moments…</div>
+</div>
+
+<!-- HERO -->
+<div id="hero">
+  <div class="hero-inner">
+    <div class="hero-store">
+      <svg class="store-svg" width="110" height="110" viewBox="0 0 110 110" fill="none">
+        <rect x="10" y="45" width="90" height="55" rx="6" fill="#0d0d0d"/>
+        <rect x="20" y="22" width="70" height="28" rx="5" fill="#0d0d0d"/>
+        <rect x="42" y="60" width="26" height="40" rx="3" fill="#d6f72f"/>
+        <rect x="13" y="58" width="20" height="18" rx="3" fill="#d6f72f"/>
+        <rect x="77" y="58" width="20" height="18" rx="3" fill="#d6f72f"/>
+        <rect x="46" y="30" width="18" height="10" rx="2" fill="#d6f72f"/>
+      </svg>
+      <div class="hero-tag">MedStore, Bardhaman</div>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav id="nav">
+  <!-- mobile ham -->
+  <button class="nav-ham mob-only" id="nav-ham" aria-label="Menu"><span></span><span></span><span></span></button>
+  <!-- mobile label -->
+  <span class="nav-label mob-only" id="nav-mob-label">Home</span>
+  <!-- desktop tabs -->
+  <div class="nav-tabs desk-only" id="nav-tabs">
+    <button class="nav-tab on" data-p="home">Home</button>
+    <button class="nav-tab" data-p="location">Location</button>
+    <button class="nav-tab" data-p="contacts">Contacts</button>
+  </div>
+  <!-- desktop search -->
+  <div class="nav-search-wrap desk-only" style="margin-left:auto">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" id="desk-search" placeholder="Search medicines…" oninput="filterMeds(this.value)">
+  </div>
+  <!-- mobile search icon -->
+  <button class="nav-search-btn mob-only" id="mob-search-btn" aria-label="Search">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+  </button>
+  <!-- cart -->
+  <button class="nav-cart-btn" id="nav-cart-btn" aria-label="Cart">
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+    <span class="cart-badge" id="cart-badge">0</span>
+  </button>
+</nav>
+
+<!-- DYNAMIC ISLAND -->
+<div id="island">
+  <button class="isl-ham" id="isl-ham"><span></span><span></span><span></span></button>
+  <span class="isl-label" id="isl-label">Home</span>
+  <button class="isl-search" id="isl-search-btn" aria-label="Search">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+  </button>
+  <button class="isl-cart" id="isl-cart-btn" aria-label="Cart">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+    <span class="isl-badge" id="isl-badge">0</span>
+  </button>
+</div>
+
+<!-- SEARCH OVERLAY (mobile) -->
+<div id="search-overlay">
+  <div class="so-head">
+    <button class="so-back" id="so-back">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </button>
+    <div class="so-input">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="mob-search-input" placeholder="Search medicines…" oninput="filterMeds(this.value,true)">
+    </div>
+  </div>
+  <div class="so-results" id="so-results"></div>
+</div>
+
+<!-- DRAWER OVERLAY -->
+<div id="overlay" onclick="closeDrawer()"></div>
+
+<!-- DRAWER -->
+<div id="drawer">
+  <button class="dr-close" onclick="closeDrawer()">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+  </button>
+  <div class="dr-top">
+    <div class="dr-brand">MedStore 💊</div>
+    <div class="dr-tagline">Near Curzon Gate, Bardhaman</div>
+  </div>
+  <div class="dr-items">
+    <div class="dr-item on" data-p="home" onclick="goTo('home');closeDrawer()">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </div>
+    <div class="dr-item" data-p="location" onclick="goTo('location');closeDrawer()">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Location
+    </div>
+    <div class="dr-item" data-p="contacts" onclick="goTo('contacts');closeDrawer()">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.9 14.5 19.79 19.79 0 0 1 1.87 5.87C1.81 4.84 2.56 3.96 3.58 3.82h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 11.2a16 16 0 0 0 4.72 4.72l1.06-1.06a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      Contacts
+    </div>
+    <div class="dr-item" data-p="cart" onclick="goTo('cart');closeDrawer()">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      Cart
+    </div>
+  </div>
+</div>
+
+<!-- MOBILE HEADER (title + search) -->
+<div id="mob-header">
+  <div class="mob-page-title" id="mob-page-title">Home</div>
+  <div class="mob-search" id="mob-search-bar-wrap">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" id="mob-inline-search" placeholder="Search medicines…" oninput="filterMeds(this.value)">
+  </div>
+</div>
+
+<!-- ═══ PAGES ═══ -->
+
+<!-- HOME -->
+<div class="pg on" id="pg-home">
+  <div style="padding:16px 16px 0"><div class="sec-title">Available Medicines</div></div>
+  <div id="med-grid" style="padding:0 16px 100px">
+    <div id="no-res">No medicines found 🔍</div>
+  </div>
+</div>
+
+<!-- DETAIL -->
+<div class="pg" id="pg-detail">
+  <button class="det-back" onclick="goBack()">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    Back
+  </button>
+  <div class="det-hero">
+    <div class="det-pill-art" id="det-emoji"></div>
+    <div class="det-badge" id="det-badge">Rx</div>
+  </div>
+  <div class="det-body">
+    <div class="det-name" id="det-name"></div>
+    <div class="det-use" id="det-use"></div>
+    <div class="det-section">
+      <div class="det-section-title">Active Contents</div>
+      <div class="det-contents" id="det-contents"></div>
+    </div>
+    <div class="det-strip">
+      <div><div class="det-strip-label">Availability</div><div class="det-strip-val">In Stock ✓</div></div>
+      <div><div class="det-strip-label">Store</div><div class="det-strip-val">MedStore, BWN</div></div>
+    </div>
+  </div>
+  <div class="det-btns">
+    <button class="btn-cart" id="det-add-cart">Add to Cart</button>
+    <button class="btn-buy" id="det-buy-now">Buy Now</button>
+  </div>
+</div>
+
+<!-- CART -->
+<div class="pg" id="pg-cart">
+  <div style="padding:20px 16px 0"><div class="pg-heading">Your Cart 🛒</div></div>
+  <div id="cart-body" style="padding:0 16px 100px"></div>
+</div>
+
+<!-- LOCATION -->
+<div class="pg" id="pg-location">
+  <div class="pg-heading">Location 📍</div>
+  <div class="loc-map" id="loc-map">
+    <div class="loc-map-placeholder">
+      <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      <p>Map loads on hosted site</p>
+    </div>
+  </div>
+  <div class="loc-addr-row">
+    <div class="loc-addr">
+      <strong>MedStore</strong>
+      <p>Near Curzon Gate (Bijoy Toron),<br>BC Road &amp; GT Road Junction,<br>Bardhaman, West Bengal — 713101</p>
+    </div>
+    <a class="loc-gmap" href="https://www.google.com/maps/search/Curzon+Gate+Bardhaman+West+Bengal" target="_blank" rel="noopener" title="Open in Google Maps">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Google_Maps_Logo_2020.svg/512px-Google_Maps_Logo_2020.svg.png" alt="Google Maps" onerror="this.parentNode.innerHTML='🗺️'">
+    </a>
+  </div>
+  <a class="loc-directions" href="https://www.google.com/maps/dir/?api=1&destination=Curzon+Gate+Bardhaman+West+Bengal" target="_blank" rel="noopener">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+    <span>Get Directions on Google Maps</span>
+  </a>
+</div>
+
+<!-- CONTACTS -->
+<div class="pg" id="pg-contacts">
+  <div class="pg-heading">Contacts 📞</div>
+  <a class="contact-card" href="https://wa.me/919832596691" target="_blank" rel="noopener">
+    <div class="cc-icon">📞</div>
+    <div><div class="cc-label">Phone / WhatsApp</div><div class="cc-val">+91 98325 96691</div></div>
+  </a>
+  <a class="contact-card" href="mailto:noorproductions.as@gmail.com">
+    <div class="cc-icon">✉️</div>
+    <div><div class="cc-label">Email</div><div class="cc-val">noorproductions.as@gmail.com</div></div>
+  </a>
+  <a class="contact-card" href="https://www.google.com/maps/search/Curzon+Gate+Bardhaman" target="_blank" rel="noopener">
+    <div class="cc-icon">📍</div>
+    <div><div class="cc-label">Address</div><div class="cc-val">Near Curzon Gate, Bardhaman, WB 713101</div></div>
+  </a>
+</div>
+
+<!-- ORDER MODAL -->
+<div id="order-modal">
+  <div class="om-backdrop" onclick="closeOrder()"></div>
+  <div class="om-sheet">
+    <div class="om-handle"></div>
+    <div class="om-title">Place Your Order</div>
+    <div class="om-med-row">
+      <div class="om-thumb" id="om-thumb"></div>
+      <div><div class="om-med-name" id="om-name"></div><div class="om-med-dose" id="om-dose"></div></div>
+    </div>
+    <div class="om-qty-row">
+      <div class="om-qty-label">Quantity</div>
+      <div class="om-qty-ctrl">
+        <button onclick="changeQty(-1)">−</button>
+        <span id="om-qty">1</span>
+        <button onclick="changeQty(1)">+</button>
+      </div>
+    </div>
+    <button class="om-place" onclick="placeOrder()">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M22 2 11 13M22 2 15 22l-4-9-9-4 20-7z"/></svg>
+      Send Order on WhatsApp
+    </button>
+  </div>
+</div>
+
+<!-- Flash -->
+<div class="added-flash" id="flash">Added to cart ✓</div>
+
+<!-- Scroll to top -->
+<button id="s2t" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+  <svg width="16" height="16" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────
+const MEDS = [
+  { id:0, name:"Paracetamol 500mg", emoji:"🟡", color:"#fff9e0",
+    contents:[{l:"Paracetamol",d:"500mg"},{l:"Corn starch",d:"—"}],
+    use:"Fever & mild pain relief", tag:"OTC" },
+  { id:1, name:"Amoxicillin 250mg", emoji:"🔴", color:"#fff0f0",
+    contents:[{l:"Amoxicillin trihydrate",d:"250mg"},{l:"Clavulanic acid",d:"125mg"}],
+    use:"Bacterial infections", tag:"Rx" },
+  { id:2, name:"Pantoprazole 40mg", emoji:"🟣", color:"#f5f0ff",
+    contents:[{l:"Pantoprazole sodium",d:"40mg"},{l:"Magnesium stearate",d:"5mg"}],
+    use:"Acidity & GERD", tag:"Rx" },
+  { id:3, name:"Cetirizine 10mg", emoji:"🟢", color:"#f0fff4",
+    contents:[{l:"Cetirizine HCl",d:"10mg"},{l:"Lactose monohydrate",d:"—"}],
+    use:"Allergy & rhinitis", tag:"OTC" },
+  { id:4, name:"Metformin 500mg", emoji:"🔵", color:"#f0f4ff",
+    contents:[{l:"Metformin HCl",d:"500mg"},{l:"Microcrystalline cellulose",d:"—"}],
+    use:"Type 2 diabetes", tag:"Rx" },
+  { id:5, name:"Atorvastatin 10mg", emoji:"❤️", color:"#fff0f2",
+    contents:[{l:"Atorvastatin calcium",d:"10mg"},{l:"Calcium carbonate",d:"20mg"}],
+    use:"Cholesterol control", tag:"Rx" },
+  { id:6, name:"Azithromycin 500mg", emoji:"🟠", color:"#fff5f0",
+    contents:[{l:"Azithromycin dihydrate",d:"500mg"},{l:"Sodium stearyl fumarate",d:"—"}],
+    use:"Respiratory infections", tag:"Rx" },
+  { id:7, name:"Omeprazole 20mg", emoji:"🟤", color:"#faf5f0",
+    contents:[{l:"Omeprazole",d:"20mg"},{l:"Sodium bicarbonate",d:"10mg"}],
+    use:"Stomach acid & ulcers", tag:"Rx" },
+  { id:8, name:"Ibuprofen 400mg", emoji:"🦴", color:"#f5f5ff",
+    contents:[{l:"Ibuprofen",d:"400mg"},{l:"Croscarmellose sodium",d:"—"}],
+    use:"Pain & inflammation", tag:"OTC" },
+  { id:9, name:"Vitamin D3 1000IU", emoji:"☀️", color:"#fffbf0",
+    contents:[{l:"Cholecalciferol (D3)",d:"1000 IU"},{l:"Calcium carbonate",d:"500mg"}],
+    use:"Bone health & immunity", tag:"OTC" }
+];
+
+// pill art SVG per medicine (styled, not emoji)
+function pillArt(med, big=false) {
+  const s = big ? 90 : 42;
+  const colors = ['#f5d020','#e85d5d','#9b59b6','#27ae60','#2980b9','#e74c3c','#e67e22','#8d6748','#7f8fa6','#f39c12'];
+  const c = colors[med.id % colors.length];
+  return `<svg width="${s}" height="${s}" viewBox="0 0 48 48" fill="none">
+    <rect x="4" y="14" width="40" height="20" rx="10" fill="${c}" opacity=".15"/>
+    <rect x="4" y="14" width="20" height="20" rx="10 0 0 10" fill="${c}"/>
+    <rect x="24" y="14" width="20" height="20" rx="0 10 10 0" fill="${c}" opacity=".5"/>
+    <line x1="24" y1="14" x2="24" y2="34" stroke="white" stroke-width="1.5"/>
+    <ellipse cx="14" cy="24" rx="5" ry="4" fill="white" opacity=".3"/>
+  </svg>`;
+}
+
+// ─── CART ────────────────────────────────────────────────
+let cart = JSON.parse(localStorage.getItem('ms_cart') || '[]');
+function saveCart(){ localStorage.setItem('ms_cart', JSON.stringify(cart)); updateCartBadge(); }
+function updateCartBadge(){
+  const n = cart.reduce((a,i)=>a+i.qty,0);
+  const b = document.getElementById('cart-badge');
+  const ib = document.getElementById('isl-badge');
+  b.textContent = ib.textContent = n;
+  b.classList.toggle('show', n>0);
+  ib.classList.toggle('show', n>0);
+}
+function addToCart(id){
+  const e = cart.find(i=>i.id===id);
+  if(e) e.qty++; else cart.push({id,qty:1});
+  saveCart(); showFlash();
+}
+function removeFromCart(id){ cart = cart.filter(i=>i.id!==id); saveCart(); renderCart(); }
+function changeCartQty(id, delta){
+  const e = cart.find(i=>i.id===id);
+  if(!e) return;
+  e.qty = Math.max(1, e.qty+delta);
+  saveCart(); renderCart();
+}
+
+// ─── SEARCH ──────────────────────────────────────────────
+function scoreMatch(text, query){
+  const t = text.toLowerCase(), q = query.toLowerCase().trim();
+  if(!q) return {score:1, hl:text};
+  // direct
+  const di = t.indexOf(q);
+  if(di !== -1) return {score:100-di, hl: text.slice(0,di)+'<mark>'+text.slice(di,di+q.length)+'</mark>'+text.slice(di+q.length)};
+  // reverse
+  const rev = q.split('').reverse().join('');
+  const ri = t.indexOf(rev);
+  if(ri !== -1) return {score:50-ri, hl: text.slice(0,ri)+'<mark>'+text.slice(ri,ri+rev.length)+'</mark>'+text.slice(ri+rev.length)};
+  // fuzzy sequential
+  let qi=0; for(let i=0;i<t.length&&qi<q.length;i++) if(t[i]===q[qi]) qi++;
+  if(qi===q.length) return {score:5, hl:text};
+  return {score:0, hl:text};
+}
+
+function getFullText(m){ return m.name+' '+m.contents.map(c=>c.d+' '+c.l).join(' ')+' '+m.use; }
+
+function filterMeds(q, overlay=false){
+  // sync inputs
+  ['desk-search','mob-inline-search','mob-search-input'].forEach(id=>{
+    const el=document.getElementById(id); if(el&&document.activeElement!==el) el.value=q;
+  });
+
+  if(overlay){
+    renderSearchOverlay(q); return;
+  }
+
+  const grid = document.getElementById('med-grid');
+  const cards = grid.querySelectorAll('.med-card');
+  const noRes = document.getElementById('no-res');
+  let vis=0;
+  cards.forEach(card=>{
+    const m = MEDS[card.dataset.id];
+    const full = getFullText(m);
+    if(!q.trim()){
+      card.style.display='';
+      card.querySelector('.med-name').innerHTML=m.name;
+      card.querySelector('.med-dose').innerHTML=fmtDose(m.contents,'');
+      vis++; return;
+    }
+    const nm = scoreMatch(m.name, q);
+    const fm = scoreMatch(full, q);
+    const best = nm.score >= fm.score ? nm : fm;
+    if(best.score>0){
+      card.style.display='';
+      card.querySelector('.med-name').innerHTML = nm.score>0 ? nm.hl : m.name;
+      card.querySelector('.med-dose').innerHTML = fmtDose(m.contents, q);
+      vis++;
+    } else { card.style.display='none'; }
+  });
+  noRes.style.display = vis===0 ? 'block':'none';
+}
+
+function fmtDose(contents, q){
+  return contents.map(c=>{
+    const s = c.d!=='—' ? `${c.d} ${c.l}` : c.l;
+    if(!q) return s;
+    const m=scoreMatch(s,q); return m.score>0?m.hl:s;
+  }).join('<br>');
+}
+
+function renderSearchOverlay(q){
+  const box = document.getElementById('so-results');
+  if(!q.trim()){ box.innerHTML='<div class="so-empty">Start typing to search…</div>'; return; }
+  const results = MEDS.map(m=>({m, s:scoreMatch(getFullText(m),q)})).filter(r=>r.s.score>0);
+  if(!results.length){ box.innerHTML='<div class="so-empty">No medicines found 🔍</div>'; return; }
+  box.innerHTML = results.map(({m})=>`
+    <div class="so-result-item" onclick="closeSearchOverlay();openDetail(${m.id})">
+      <div class="so-thumb" style="background:${m.color}">${pillArt(m)}</div>
+      <div class="so-info">
+        <div class="so-name">${scoreMatch(m.name,q).hl}</div>
+        <div class="so-dose">${m.use}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ─── RENDER GRID ─────────────────────────────────────────
+function renderGrid(){
+  const grid=document.getElementById('med-grid');
+  const noRes=document.getElementById('no-res');
+  MEDS.forEach(m=>{
+    const card=document.createElement('div');
+    card.className='med-card'; card.dataset.id=m.id;
+    card.innerHTML=`
+      <div class="med-img-wrap" style="background:${m.color}">
+        <div class="pill-art">${pillArt(m)}</div>
+      </div>
+      <div class="med-body">
+        <div class="med-name">${m.name}</div>
+        <div class="med-dose">${fmtDose(m.contents,'')}</div>
+      </div>`;
+    card.addEventListener('click',()=>openDetail(m.id));
+    grid.insertBefore(card,noRes);
+  });
+}
+
+// ─── DETAIL ──────────────────────────────────────────────
+let activeMedId=null, prevPage='home';
+function openDetail(id){
+  activeMedId=id;
+  prevPage=currentPage;
+  const m=MEDS[id];
+  document.getElementById('det-emoji').innerHTML=`<div style="font-size:${window.innerWidth<768?'5':'7'}rem;filter:drop-shadow(0 12px 32px rgba(0,0,0,.15))">${pillArt(m,true)}</div>`;
+  document.getElementById('det-name').textContent=m.name;
+  document.getElementById('det-use').textContent=m.use;
+  document.getElementById('det-badge').textContent=m.tag;
+  document.getElementById('det-contents').innerHTML=m.contents.map(c=>`<span class="det-chip">${c.d!=='—'?c.d+' ':''} ${c.l}</span>`).join('');
+  document.getElementById('det-add-cart').onclick=()=>{addToCart(id); showFlash();};
+  document.getElementById('det-buy-now').onclick=()=>openOrder(id);
+  goTo('detail',true);
+}
+function goBack(){ goTo(prevPage); }
+
+// ─── CART RENDER ─────────────────────────────────────────
+function renderCart(){
+  const box=document.getElementById('cart-body');
+  if(!cart.length){
+    box.innerHTML=`<div class="cart-empty">
+      <svg width="64" height="64" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      <p>Your cart is empty</p></div>`; return;
+  }
+  box.innerHTML = cart.map(item=>{
+    const m=MEDS[item.id];
+    return `<div class="cart-item">
+      <div class="ci-thumb" style="background:${m.color}">${pillArt(m)}</div>
+      <div class="ci-info">
+        <div class="ci-name">${m.name}</div>
+        <div class="ci-dose">${m.use}</div>
+        <div class="ci-actions">
+          <div class="ci-qty">
+            <button onclick="changeCartQty(${m.id},-1)">−</button>
+            <span>${item.qty}</span>
+            <button onclick="changeCartQty(${m.id},1)">+</button>
+          </div>
+          <button class="ci-rm" onclick="removeFromCart(${m.id})">Remove</button>
+          <button class="ci-buy" onclick="openOrder(${m.id})">Buy</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // summary
+  const total = cart.length;
+  const qty = cart.reduce((a,i)=>a+i.qty,0);
+  box.innerHTML += `<div class="cart-summary">
+    <div class="cs-row"><span>Items</span><span>${total} medicine${total>1?'s':''}</span></div>
+    <div class="cs-row total"><span>Total Qty</span><span>${qty} strip${qty>1?'s':''}</span></div>
+    <button class="cs-checkout" onclick="checkoutAll()">Place All Orders via WhatsApp</button>
+  </div>`;
+}
+
+function checkoutAll(){
+  if(!cart.length) return;
+  const lines = cart.map(i=>`• ${MEDS[i.id].name} × ${i.qty}`).join('%0A');
+  const msg = `Hi MedStore, I'd like to order:%0A${lines}%0A%0APlease confirm availability.`;
+  window.open(`https://wa.me/919832596691?text=${msg}`,'_blank');
+}
+
+// ─── ORDER MODAL ─────────────────────────────────────────
+let orderMedId=null, orderQty=1;
+function openOrder(id){
+  orderMedId=id; orderQty=1;
+  const m=MEDS[id];
+  document.getElementById('om-thumb').innerHTML=pillArt(m,false);
+  document.getElementById('om-thumb').style.background=m.color;
+  document.getElementById('om-name').textContent=m.name;
+  document.getElementById('om-dose').textContent=m.use;
+  document.getElementById('om-qty').textContent=1;
+  document.getElementById('order-modal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeOrder(){
+  document.getElementById('order-modal').classList.remove('open');
+  document.body.style.overflow='';
+}
+function changeQty(d){ orderQty=Math.max(1,orderQty+d); document.getElementById('om-qty').textContent=orderQty; }
+function placeOrder(){
+  const m=MEDS[orderMedId];
+  const msg=`Hi MedStore, I'd like to buy *${m.name}* in a quantity of *${orderQty}*. Please confirm availability.`;
+  window.open(`https://wa.me/919832596691?text=${encodeURIComponent(msg)}`,'_blank');
+  closeOrder();
+}
+
+// ─── NAVIGATION ──────────────────────────────────────────
+let currentPage='home';
+const PAGE_TITLES={home:'Home',location:'Location',contacts:'Contacts',cart:'Cart',detail:'Product'};
+
+function goTo(page, skipHistory=false){
+  if(page===currentPage && page!=='detail') return;
+  currentPage=page;
+
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.getElementById('pg-'+page).classList.add('on');
+
+  // nav tabs
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.toggle('on',t.dataset.p===page));
+  document.querySelectorAll('.dr-item').forEach(t=>t.classList.toggle('on',t.dataset.p===page));
+
+  // labels
+  const label = PAGE_TITLES[page]||'MedStore';
+  document.getElementById('nav-mob-label').textContent=label;
+  document.getElementById('isl-label').textContent=label;
+  const mpt=document.getElementById('mob-page-title');
+  if(mpt) mpt.textContent=label;
+
+  // hero & search bar visibility
+  const hero=document.getElementById('hero');
+  const mobHeader=document.getElementById('mob-header');
+  const mobSearchBar=document.getElementById('mob-search-bar-wrap');
+
+  if(page==='location'||page==='contacts'||page==='cart'||page==='detail'){
+    hero.classList.add('gone');
+    if(mobHeader){
+      mobHeader.style.display='block';
+      if(mobSearchBar) mobSearchBar.style.display = page==='home'?'flex':'none';
+    }
+  } else {
+    hero.classList.remove('gone');
+    if(mobHeader){
+      mobHeader.style.display='block';
+      if(mobSearchBar) mobSearchBar.style.display='flex';
+    }
+  }
+
+  // render cart when navigating to it
+  if(page==='cart') renderCart();
+
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// desktop tab clicks
+document.getElementById('nav-tabs').addEventListener('click',e=>{
+  const tab=e.target.closest('.nav-tab');
+  if(tab) goTo(tab.dataset.p);
+});
+
+// cart btn
+document.getElementById('nav-cart-btn').addEventListener('click',()=>goTo('cart'));
+document.getElementById('isl-cart-btn').addEventListener('click',()=>goTo('cart'));
+
+// ─── HAMBURGER ───────────────────────────────────────────
+function openDrawer(){
+  document.getElementById('drawer').classList.add('on');
+  document.getElementById('overlay').classList.add('on');
+  document.getElementById('nav-ham').classList.add('x');
+  document.getElementById('isl-ham').classList.add('x');
+  document.body.style.overflow='hidden';
+}
+function closeDrawer(){
+  document.getElementById('drawer').classList.remove('on');
+  document.getElementById('overlay').classList.remove('on');
+  document.getElementById('nav-ham').classList.remove('x');
+  document.getElementById('isl-ham').classList.remove('x');
+  document.body.style.overflow='';
+}
+document.getElementById('nav-ham').addEventListener('click',()=>{
+  document.getElementById('drawer').classList.contains('on')?closeDrawer():openDrawer();
+});
+document.getElementById('isl-ham').addEventListener('click',()=>{
+  document.getElementById('drawer').classList.contains('on')?closeDrawer():openDrawer();
+});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){closeDrawer();closeOrder();closeSearchOverlay();} });
+
+// ─── SEARCH OVERLAY ──────────────────────────────────────
+function openSearchOverlay(){
+  document.getElementById('search-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+  setTimeout(()=>document.getElementById('mob-search-input').focus(),300);
+}
+function closeSearchOverlay(){
+  document.getElementById('search-overlay').classList.remove('open');
+  document.body.style.overflow='';
+  document.getElementById('mob-search-input').value='';
+  document.getElementById('so-results').innerHTML='';
+}
+document.getElementById('mob-search-btn').addEventListener('click',openSearchOverlay);
+document.getElementById('isl-search-btn').addEventListener('click',openSearchOverlay);
+document.getElementById('so-back').addEventListener('click',closeSearchOverlay);
+
+// ─── DYNAMIC ISLAND ──────────────────────────────────────
+let lastScrollY=0, scrollDir=0, islandVisible=false;
+const island=document.getElementById('island');
+window.addEventListener('scroll',()=>{
+  const sy=window.scrollY;
+  const s2t=document.getElementById('s2t');
+
+  // scroll to top btn
+  s2t.classList.toggle('on', sy>300);
+
+  // island: show on scroll-up after scrolling down past 120px
+  if(sy<80){ island.classList.remove('show'); islandVisible=false; }
+  else if(sy<lastScrollY){ island.classList.add('show'); islandVisible=true; }
+  else if(sy>lastScrollY+10){ island.classList.remove('show'); islandVisible=false; }
+
+  lastScrollY=sy;
+},{ passive:true });
+
+// ─── FLASH ───────────────────────────────────────────────
+let flashTimer;
+function showFlash(){
+  const f=document.getElementById('flash');
+  f.classList.add('show');
+  clearTimeout(flashTimer);
+  flashTimer=setTimeout(()=>f.classList.remove('show'),2000);
+}
+
+// ─── MAP IFRAME (inject after load to avoid blocking) ────
+function injectMap(){
+  const c=document.getElementById('loc-map');
+  c.innerHTML=`<iframe
+    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3660.5!2d87.8653!3d23.2404!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39f71e8b6c0f1ce9%3A0x3a3f4f7b5e6c4a2d!2sBijoy+Toron+(Curzon+Gate)!5e0!3m2!1sen!2sin!4v1"
+    width="100%" height="100%" style="border:0;display:block" allowfullscreen loading="lazy"
+    referrerpolicy="no-referrer-when-downgrade"></iframe>`;
+}
+
+// ─── INIT ─────────────────────────────────────────────────
+window.addEventListener('load',()=>{
+  renderGrid();
+  updateCartBadge();
+  // show mob header on mobile
+  if(window.innerWidth<768) document.getElementById('mob-header').style.display='block';
+  // hide search bar on non-home mobile pages (initial state is home so show it)
+  setTimeout(()=>{
+    document.getElementById('loader').classList.add('out');
+    injectMap();
+  },800);
+});
+
+// Responsive: update layout on resize
+window.addEventListener('resize',()=>{
+  const mh=document.getElementById('mob-header');
+  if(window.innerWidth>=768) mh.style.display='none';
+  else if(currentPage!=='detail') mh.style.display='block';
+});
+</script>
+</body>
+</html>
